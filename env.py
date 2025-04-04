@@ -4,7 +4,7 @@ class TrackingEnv:
     def __init__(self, size=100):
         self.size = size
         self.reset()
-
+ 
     def reset(self):
         # 타겟과 에이전트 위치 초기화
         self.agent_pos = np.array([np.random.randint(self.size), np.random.randint(self.size)])

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 import numpy as np
-
+ 
 class DQN(nn.Module):
     def __init__(self, state_dim=4, action_dim=4):
         super(DQN, self).__init__()
