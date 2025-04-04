@@ -3,17 +3,27 @@ from dqn import DQNAgent
 import cv2
 import torch
 import numpy as np
- 
-# 학습된 에이전트 불러오기
-agent = DQNAgent()
-agent.model.load_state_dict(torch.load("dqn_model.pth"))  # 저장된 모델 불러오기
-agent.epsilon = 0.0  # 💡 랜덤 없이 Q-value 기반 행동만
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+agent = DQNAgent(device=device)
+agent.model.load_state_dict(torch.load("dqn_model.pth", map_location=device))  # ✅ GPU에서 로드
+agent.model.to(device)  
+agent.epsilon = 0.0 # 탐험 없음
+
 
 env = TrackingEnv(size=100)
 
-for ep in range(5):  # 5개의 에피소드 시각화
+agent_history = []
+target_history = []
+
+print(f"사용 중 {device}")
+
+for ep in range(5):  # 5개 에피소드 실행
     state = env.reset()
     total_reward = 0
+    agent_history.clear()
+    target_history.clear()
 
     for t in range(100):
         action = agent.select_action(state)
@@ -21,15 +31,23 @@ for ep in range(5):  # 5개의 에피소드 시각화
         total_reward += reward
         state = next_state
 
-        # 시각화
-        img = np.ones((100, 100, 3), dtype=np.uint8) * 255
         ax, ay, tx, ty = state.astype(int)
 
-        img[ty, tx] = [0, 0, 255]   # 타겟 = 빨간색
-        img[ay, ax] = [255, 0, 0]   # 에이전트 = 파란색
+        agent_history.append((ax, ay))
+        target_history.append((tx, ty))
+
+        img = np.ones((100, 100, 3), dtype=np.uint8) * 255
+
+        for i in range(1, len(agent_history)):
+            cv2.line(img, agent_history[i - 1], agent_history[i], color=(255, 0, 0), thickness=1)
+        for i in range(1, len(target_history)):
+            cv2.line(img, target_history[i - 1], target_history[i], color=(0, 0, 255), thickness=1)
+
+        img[ty, tx] = [0, 0, 150]    # 타겟
+        img[ay, ax] = [150, 0, 0]    # 에이전트
 
         img = cv2.resize(img, (500, 500), interpolation=cv2.INTER_NEAREST)
-        cv2.imshow("DQN Agent Evaluation", img)
+        cv2.imshow("DQN Agent Evaluation (Path)", img)
         if cv2.waitKey(30) == 27:
             break
 

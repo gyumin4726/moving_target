@@ -3,14 +3,16 @@ from dqn import DQNAgent
 from replay_buffer import ReplayBuffer
 import numpy as np
 import torch
- 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = TrackingEnv(size=100)
-agent = DQNAgent()
+agent = DQNAgent(device=device)
 buffer = ReplayBuffer()
 
 batch_size = 64
 target_update_freq = 10
 episodes = 500
+print(f"사용 중 {device}")
 
 for ep in range(episodes):
     state = env.reset()
